@@ -5,6 +5,7 @@ import dev.tqqn.referee.player.Role;
 import dev.tqqn.referee.state.AbstractState;
 import dev.tqqn.referee.status.MatchStatus;
 import io.papermc.paper.event.connection.PlayerConnectionValidateLoginEvent;
+import lombok.Getter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
@@ -19,7 +20,7 @@ import org.bukkit.potion.PotionEffect;
 public class WaitingState<G extends Match<?>> extends AbstractState<G> {
 
     private final int countdown;
-    private int left = -1;
+    @Getter private int left = -1;
     private boolean forceStart;
 
     public WaitingState(G match, int countdownSeconds) {

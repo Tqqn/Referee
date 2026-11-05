@@ -10,7 +10,7 @@ import lombok.Setter;
  */
 public abstract class AbstractState<G extends Match<?>> implements MatchState {
 
-    protected final G match;
+    @Getter protected final G match;
     private final String name;
     @Getter
     private final int duration;

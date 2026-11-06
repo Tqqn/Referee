@@ -4,6 +4,8 @@ import dev.tqqn.referee.match.Match;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.logging.Level;
+
 /**
  * @author Tqqn (tqqn.dev)
  * Created on 05/11/2026
@@ -47,11 +49,13 @@ public abstract class AbstractState<G extends Match<?>> implements MatchState {
         this.scope = scope;
         this.timeLeft = duration;
         this.frozen = false;
+        getMatch().getLogger().log(Level.INFO, "Entering state: " + name);
         onEnter();
     }
 
     @Override
     public final void exit() {
+        getMatch().getLogger().log(Level.INFO, "Exiting state: " + name);
         onExit();
         this.scope = null;
     }

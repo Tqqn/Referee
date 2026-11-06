@@ -26,6 +26,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * @author Tqqn (tqqn.dev)
@@ -57,6 +58,8 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
     protected abstract List<MatchState> createStates();
 
     protected abstract P createPlayer(UUID uuid);
+
+    public abstract Logger getLogger();
 
     public MatchMessages messages() {
         return MatchMessages.DEFAULT;

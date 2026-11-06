@@ -6,7 +6,7 @@
 
     <groupId>dev.tqqn</groupId>
     <artifactId>referee</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
     <name>Referee</name>
     <description>Small state-machine framework for minigames: states, teams, lobby countdown, end flow.</description>
 

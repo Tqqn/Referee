@@ -4,6 +4,7 @@ A small framework for one-match-per-server Paper minigames. You describe your ma
 
 - **States** with an optional countdown. Listeners, commands and tasks registered in a state are cleaned up when it ends.
 - **Lobby** (`WaitingState`): min-player countdown, cancels when players leave, force start, assigns teams.
+- **Playing** (`PlayingState`): eliminations, quitting with an optional reconnect window, late joiners spectate.
 - **End** (`EndState`): countdown, sends players to your lobby server via BungeeCord/Velocity, shuts down.
 - **Solo or teams**: `SoloMatch` for free-for-all, `TeamMatch` for teams (one-player teams too), with swappable team assignment.
 - **Arenas**: copy a prepared map or generate a fresh world every match, with named spawn points from `arena.yml`.
@@ -22,7 +23,7 @@ Requires Paper 26.3+, Java 25 and [ACF](https://github.com/aikar/commands) (shad
 <dependency>
     <groupId>com.github.Tqqn</groupId>
     <artifactId>Referee</artifactId>
-    <version>v0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 
 <!-- Referee uses ACF but doesn't bundle it -->
@@ -35,7 +36,7 @@ Requires Paper 26.3+, Java 25 and [ACF](https://github.com/aikar/commands) (shad
 
 ACF lives in `https://repo.aikar.co/content/groups/aikar/`. Shade both into your plugin with the `maven-shade-plugin` and relocate
 `dev.tqqn.referee`, `co.aikar.commands` and `co.aikar.locales` into your own package. Want the latest commit instead of a release?
-Use version `main-SNAPSHOT`.
+Use version `master-SNAPSHOT`.
 
 ## Example
 
@@ -43,7 +44,7 @@ Use version `main-SNAPSHOT`.
 public final class SpleefMatch extends SoloMatch<MatchPlayer> {
 
     public SpleefMatch(JavaPlugin plugin, PaperCommandManager commands) {
-        super(plugin, commands, MatchSettings.fromEnv(new MatchSettings(2, 8, "CLASSIC")));
+        super(plugin, commands, MatchSettings.fromEnv(new MatchSettings(2, 1, 8, "CLASSIC")));   // min 2, up to 8 players
     }
 
     @Override protected List<MatchState> createStates() {
@@ -53,14 +54,18 @@ public final class SpleefMatch extends SoloMatch<MatchPlayer> {
     @Override protected MatchPlayer createPlayer(UUID uuid) {
         return new MatchPlayer(uuid);
     }
+
+    @Override public Logger getLogger() {
+        return getPlugin().getLogger();
+    }
 }
 
-public final class SpleefActiveState extends AbstractState<SpleefMatch> {
+public final class SpleefActiveState extends PlayingState<SpleefMatch> {
 
     public SpleefActiveState(SpleefMatch match) { super(match, "Active", 600); }
 
     @Override protected void onEnter() {
-        match.setStatus(MatchStatus.IN_GAME);
+        super.onEnter();                        // IN_GAME status
         register(new SpleefListener(match));   // unregistered automatically when the state ends
     }
 }
@@ -70,8 +75,8 @@ Call `match.start()` once your arena is ready. Until then, players are refused.
 
 ## Settings from environment
 
-Handy for container-per-match setups: `MatchSettings.fromEnv(defaults)` reads `MIN_GAME_PLAYERS_TO_START`, `MAX_PLAYERS`
-and `GAME_TYPE`, falling back to your defaults. Read your own variables with `MatchSettings.envInt("PLAYERS_PER_TEAM", 1)`.
+Handy for container-per-match setups: `MatchSettings.fromEnv(defaults)` reads `MIN_GAME_PLAYERS_TO_START`,
+`PLAYERS_PER_TEAM`, `TEAM_COUNT` and `GAME_TYPE`, falling back to your defaults. Max players is team size × team count.
 
 ## Solo or teams
 
@@ -85,10 +90,8 @@ Pick the base class that fits the game:
 
 ```java
 public final class BingoMatch extends TeamMatch<BingoPlayer> {           // BingoPlayer extends TeamPlayer
-    public BingoMatch(JavaPlugin plugin, PaperCommandManager commands) {
-        super(plugin, commands,
-              MatchSettings.fromEnv(new MatchSettings(1, 8, "NORMAL")),
-              MatchSettings.envInt("PLAYERS_PER_TEAM", 1));              // 8 players / 1 = 8 teams
+    public BingoMatch(JavaPlugin plugin, PaperCommandManager commands, MatchSettings settings) {
+        super(plugin, commands, settings, settings.teamSize());          // e.g. teams of 1, 4 teams
     }
 }
 
@@ -98,8 +101,25 @@ arena.teleportToSpawns(match.getAlive());                   // SoloMatch: one sp
 if (match.isDecided()) match.getWinner().ifPresent(this::announce);
 ```
 
-Teams are assigned when the lobby countdown ends. Team count is `maxPlayers / teamSize`, at most 8 (one per colour);
-above that, use `SoloMatch`.
+Teams are assigned when the lobby countdown ends. At most 8 teams (one per colour); above that, use `SoloMatch`.
+
+## Eliminations and quitting
+
+Extend `PlayingState` for the part where the game is played. Your game decides when someone is out; Referee does the rest:
+
+```java
+// in your listener: fell into the void, died, ...
+match.eliminate(player.getUniqueId());
+```
+
+`eliminate` makes them a spectator, fires `PlayerEliminatedEvent`, and when one player or team is left calls `onDecided()`
+(default: go to the next state, usually your `EndState`). Players who quit are eliminated too, or get time to reconnect:
+
+```java
+@Override protected int rejoinSeconds() { return 30; }
+```
+
+Players who log in during the game spectate. Turn that off with `allowSpectators()`.
 
 ## Arenas
 
@@ -115,14 +135,14 @@ Arena arena = new GeneratedArena(plugin, new WorldCreator("arena").environment(W
 arena.load()
         .thenRun(match::start)          // completes on the main thread
         .exceptionally(e -> {
-            plugin.getLogger().log(Level.SEVERE, "Arena failed to load", e);
+        plugin.getLogger().log(Level.SEVERE, "Arena failed to load", e);
             Bukkit.shutdown();
             return null;
-        });
+                    });
 
-arena.teleportToSpawns(match.getAlive());            // SoloMatch
-arena.teleportTeamsToSpawns(match.getTeams().getTeams()); // TeamMatch
-player.teleport(arena.point("spectator"));
+                    arena.teleportToSpawns(match.getAlive());            // SoloMatch
+        arena.teleportTeamsToSpawns(match.getTeams().getTeams()); // TeamMatch
+        player.teleport(arena.point("spectator"));
 ```
 
 `arena.yml` inside a map folder:

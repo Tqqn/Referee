@@ -43,4 +43,16 @@ public interface MatchMessages {
     default String sendingToLobby() {
         return "<red>Server restarting... Sending to lobby...";
     }
+
+    default String playerDisconnected(String name, int seconds) {
+        return "<gray>" + name + " disconnected and has <white>" + seconds + "s <gray>to come back.";
+    }
+
+    default String playerRejoined(String name) {
+        return "<green>" + name + " is back.";
+    }
+
+    default String playerLeftMatch(String name) {
+        return "<red>" + name + " left the match.";
+    }
 }

@@ -2,6 +2,7 @@ package dev.tqqn.referee.match;
 
 import co.aikar.commands.PaperCommandManager;
 import dev.tqqn.referee.event.MatchStateChangeEvent;
+import dev.tqqn.referee.event.PlayerEliminatedEvent;
 import dev.tqqn.referee.message.MatchMessages;
 import dev.tqqn.referee.player.MatchPlayer;
 import dev.tqqn.referee.player.Role;
@@ -9,12 +10,11 @@ import dev.tqqn.referee.state.MatchState;
 import dev.tqqn.referee.state.StateScope;
 import dev.tqqn.referee.status.MatchStatus;
 import dev.tqqn.referee.status.StatusPublisher;
-import dev.tqqn.referee.team.TeamAssigner;
-import dev.tqqn.referee.team.TeamManager;
 import io.papermc.paper.event.connection.PlayerConnectionValidateLoginEvent;
 import lombok.Getter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -139,6 +139,26 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
         return matchPlayer;
     }
 
+    public void eliminate(P player) {
+        if (player.getRole() != Role.PLAYING) return;
+        player.setRole(Role.SPECTATOR);
+        player.getPlayer().ifPresent(this::spectate);
+        Bukkit.getPluginManager().callEvent(new PlayerEliminatedEvent(this, player));
+        if (isDecided()) onDecided();
+    }
+
+    public void eliminate(UUID uuid) {
+        getPlayer(uuid).ifPresent(this::eliminate);
+    }
+
+    public void spectate(Player player) {
+        player.setGameMode(GameMode.SPECTATOR);
+    }
+
+    protected void onDecided() {
+        nextState();
+    }
+
     public List<P> getAlive() {
         return players.values().stream().filter(p -> p.getRole() == Role.PLAYING).toList();
     }
@@ -146,7 +166,7 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
     /** Called by WaitingState when the countdown ends, right before the next state. TeamMatch assigns teams here. */
     public void onLobbyEnd() {}
 
-    /** True when the match is decided (one player / one team left). Call it from your death/quit handling. */
+    /** True when the match is decided (one player / one team left). eliminate() checks it for you. */
     public abstract boolean isDecided();
 
     /** Default rule; override for other start conditions. */

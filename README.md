@@ -11,6 +11,7 @@ A small framework for one-match-per-server Paper minigames. You describe your ma
 - **Hooks** for messages, team assignment and status publishing (lobby signs, server lists).
 
 Requires Paper 26.3+, Java 25 and [ACF](https://github.com/aikar/commands) (shade and relocate it in your plugin).
+Games that use [spectators](#spectators) also need the [Satchel](https://github.com/Tqqn/Satchel) plugin on the server.
 
 ## Install (JitPack)
 

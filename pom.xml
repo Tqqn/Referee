@@ -25,6 +25,10 @@
             <id>aikar</id>
             <url>https://repo.aikar.co/content/groups/aikar/</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -51,6 +55,12 @@
             <artifactId>junit-jupiter</artifactId>
             <version>5.11.3</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.Tqqn</groupId>
+            <artifactId>Satchel</artifactId>
+            <version>0.1.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

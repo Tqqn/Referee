@@ -4,6 +4,19 @@ All notable changes to Referee. The format follows [Keep a Changelog](https://ke
 versions follow [Semantic Versioning](https://semver.org/), so while Referee is 0.x a minor release can break things
 (marked **Breaking** below).
 
+## [0.3.2] - 2026-11-15
+
+### Added
+- `SpectatorHandler#setTransparent(true)`: spectators see each other as see-through ghosts. Off by default.
+- Spectators show as `✖ | name` in gray in tab and above their head; change it with
+  `MatchMessages#spectatorNamePrefix()` and `spectatorNameColor()`.
+- Spectator chat: spectators only chat with each other, with their team in front if they had one
+  (`MatchMessages#spectatorChat(...)` and `spectatorChatTeam(...)`).
+- Spectators are listed below the players in tab.
+
+### Fixed
+- Spectators could move items in their inventory.
+
 ## [0.3.1] - 2026-11-14
 
 ### Fixed

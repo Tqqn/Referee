@@ -141,14 +141,15 @@ Arena arena = new GeneratedArena(plugin, new WorldCreator("arena").environment(W
 arena.load()
         .thenRun(match::start)          // completes on the main thread
         .exceptionally(e -> {
-        plugin.getLogger().log(Level.SEVERE, "Arena failed to load", e);
+            plugin.getLogger().log(Level.SEVERE, "Arena failed to load", e);
             Bukkit.shutdown();
             return null;
-                    });
+        
+        });
 
-                    arena.teleportToSpawns(match.getAlive());            // SoloMatch
-        arena.teleportTeamsToSpawns(match.getTeams().getTeams()); // TeamMatch
-        player.teleport(arena.point("spectator"));
+arena.teleportToSpawns(match.getAlive());            // SoloMatch
+arena.teleportTeamsToSpawns(match.getTeams().getTeams()); // TeamMatch
+player.teleport(arena.point("spectator"));
 ```
 
 `arena.yml` inside a map folder:

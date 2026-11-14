@@ -45,7 +45,7 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
     private int stateIndex = -1;
     private StateScope scope;
     private BukkitTask ticker;
-    private SpectatorHandler spectatorHandler;
+    private SpectatorHandler<P> spectatorHandler;
 
     private MatchStatus status = MatchStatus.NOT_JOINABLE;
 
@@ -67,7 +67,7 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
         return MatchMessages.DEFAULT;
     }
 
-    protected SpectatorHandler createSpectatorHandler() {
+    protected SpectatorHandler<P> createSpectatorHandler() {
         return null;
     }
 

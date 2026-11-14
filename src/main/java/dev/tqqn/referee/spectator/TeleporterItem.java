@@ -13,9 +13,9 @@ public final class TeleporterItem extends PluginItem {
 
     private static final String KEY = "referee:teleporter";
 
-    private final SpectatorHandler handler;
+    private final SpectatorHandler<?> handler;
 
-    TeleporterItem(SpectatorHandler handler) {
+    TeleporterItem(SpectatorHandler<?> handler) {
         super(KEY, ItemBuilder.of(Material.COMPASS).name(handler.match.messages().teleportCompassName()).build());
         this.handler = handler;
     }

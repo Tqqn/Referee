@@ -1,9 +1,12 @@
 package dev.tqqn.referee.spectator;
 
 import dev.tqqn.referee.match.Match;
+import dev.tqqn.referee.player.MatchPlayer;
 import dev.tqqn.referee.player.Role;
+import dev.tqqn.referee.player.TeamPlayer;
+import dev.tqqn.referee.team.MatchTeam;
 import dev.tqqn.satchel.Satchel;
-import net.kyori.adventure.text.Component;
+import dev.tqqn.satchel.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -24,13 +27,16 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Tqqn (tqqn.dev)
  * Created on 14/11/2026
  */
-public class SpectatorHandler implements Listener {
+public class SpectatorHandler<P extends MatchPlayer> implements Listener {
 
-    protected final Match<?> match;
+    protected final Match<P> match;
 
     private final TeleporterItem teleporterItem;
 
@@ -78,16 +84,33 @@ public class SpectatorHandler implements Listener {
 
     /** Opens the teleport menu with every online player still in the match. */
     public void openTeleportMenu(Player viewer) {
-        new TeleportMenu(this, viewer).open();
+        new TeleportMenu<>(this, viewer).open();
     }
 
-    protected ItemStack createHead(Player target) {
-        final ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-        head.editMeta(SkullMeta.class, meta -> {
-            meta.setOwningPlayer(target);
-            meta.displayName(Component.text(target.getName()));
-        });
+    protected ItemStack createHead(P target, Player online) {
+        final ItemStack head = ItemBuilder.of(Material.PLAYER_HEAD)
+                .name(headName(target, online))
+                .lore(headLore(target, online))
+                .build();
+        head.editMeta(SkullMeta.class, meta -> meta.setOwningPlayer(online));
         return head;
+    }
+
+    protected String headName(P target, Player online) {
+        final MatchTeam team = teamOf(target);
+        return team == null ? "<white>" + online.getName() : team.getColor().getMiniColor() + "[" + team.getColor().getDisplayName().toUpperCase() + "] " + online.getName();
+    }
+
+    protected List<String> headLore(P target, Player online) {
+        final List<String> lore = new ArrayList<>();
+        final MatchTeam team = teamOf(target);
+        if (team != null) lore.add(match.messages().teleportHeadTeam(team.getColoredName()));
+        lore.add(match.messages().teleportHeadClick());
+        return lore;
+    }
+
+    private static MatchTeam teamOf(MatchPlayer player) {
+        return player instanceof TeamPlayer teamPlayer ? teamPlayer.getTeam() : null;
     }
 
     // ---- keep spectators out of the game ----

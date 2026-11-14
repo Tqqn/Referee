@@ -63,4 +63,12 @@ public interface MatchMessages {
     default String teleportMenuTitle() {
         return "Teleport to a player";
     }
+
+    default String teleportHeadTeam(String coloredTeamName) {
+        return "<gray>Team: " + coloredTeamName;
+    }
+
+    default String teleportHeadClick() {
+        return "<yellow>Click to spectate";
+    }
 }

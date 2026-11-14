@@ -25,7 +25,7 @@ Games that use [spectators](#spectators) also need the [Satchel](https://github.
 <dependency>
     <groupId>com.github.Tqqn</groupId>
     <artifactId>Referee</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 
 <!-- Referee uses ACF but doesn't bundle it -->

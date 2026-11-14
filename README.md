@@ -47,15 +47,18 @@ public final class SpleefMatch extends SoloMatch<MatchPlayer> {
         super(plugin, commands, MatchSettings.fromEnv(new MatchSettings(2, 1, 8, "CLASSIC")));   // min 2, up to 8 players
     }
 
-    @Override protected List<MatchState> createStates() {
+    @Override 
+    protected List<MatchState> createStates() {
         return List.of(new WaitingState<>(this), new SpleefActiveState(this), new EndState<>(this, "lobby"));
     }
 
-    @Override protected MatchPlayer createPlayer(UUID uuid) {
+    @Override 
+    protected MatchPlayer createPlayer(UUID uuid) {
         return new MatchPlayer(uuid);
     }
 
-    @Override public Logger getLogger() {
+    @Override 
+    public Logger getLogger() {
         return getPlugin().getLogger();
     }
 }
@@ -64,7 +67,8 @@ public final class SpleefActiveState extends PlayingState<SpleefMatch> {
 
     public SpleefActiveState(SpleefMatch match) { super(match, "Active", 600); }
 
-    @Override protected void onEnter() {
+    @Override 
+    protected void onEnter() {
         super.onEnter();                        // IN_GAME status
         register(new SpleefListener(match));   // unregistered automatically when the state ends
     }
@@ -116,7 +120,8 @@ match.eliminate(player.getUniqueId());
 (default: go to the next state, usually your `EndState`). Players who quit are eliminated too, or get time to reconnect:
 
 ```java
-@Override protected int rejoinSeconds() { return 30; }
+@Override 
+protected int rejoinSeconds() { return 30; }
 ```
 
 Players who log in during the game spectate. Turn that off with `allowSpectators()`.

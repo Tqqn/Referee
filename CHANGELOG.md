@@ -4,6 +4,12 @@ All notable changes to Referee. The format follows [Keep a Changelog](https://ke
 versions follow [Semantic Versioning](https://semver.org/), so while Referee is 0.x a minor release can break things
 (marked **Breaking** below).
 
+## [0.3.1] - 2026-11-14
+
+### Fixed
+- Spectators could pick up arrows and tridents from the ground.
+- Projectiles stopped at hidden spectators instead of flying through them.
+
 ## [0.3.0] - 2026-11-14
 
 ### Added

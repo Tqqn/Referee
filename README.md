@@ -5,12 +5,14 @@ A small framework for one-match-per-server Paper minigames. You describe your ma
 - **States** with an optional countdown. Listeners, commands and tasks registered in a state are cleaned up when it ends.
 - **Lobby** (`WaitingState`): min-player countdown, cancels when players leave, force start, assigns teams.
 - **Playing** (`PlayingState`): eliminations, quitting with an optional reconnect window, late joiners spectate.
+- **Spectators** (opt-in): hidden and flying, with a compass to teleport to players still in the game. Staff can watch any match.
 - **End** (`EndState`): countdown, sends players to your lobby server via BungeeCord/Velocity, shuts down.
 - **Solo or teams**: `SoloMatch` for free-for-all, `TeamMatch` for teams (one-player teams too), with swappable team assignment.
 - **Arenas**: copy a prepared map or generate a fresh world every match, with named spawn points from `arena.yml`.
 - **Hooks** for messages, team assignment and status publishing (lobby signs, server lists).
 
 Requires Paper 26.3+, Java 25 and [ACF](https://github.com/aikar/commands) (shade and relocate it in your plugin).
+Games that use [spectators](#spectators) also need the [Satchel](https://github.com/Tqqn/Satchel) plugin on the server.
 
 ## Install (JitPack)
 
@@ -23,7 +25,7 @@ Requires Paper 26.3+, Java 25 and [ACF](https://github.com/aikar/commands) (shad
 <dependency>
     <groupId>com.github.Tqqn</groupId>
     <artifactId>Referee</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 
 <!-- Referee uses ACF but doesn't bundle it -->
@@ -47,17 +49,17 @@ public final class SpleefMatch extends SoloMatch<MatchPlayer> {
         super(plugin, commands, MatchSettings.fromEnv(new MatchSettings(2, 1, 8, "CLASSIC")));   // min 2, up to 8 players
     }
 
-    @Override 
+    @Override
     protected List<MatchState> createStates() {
         return List.of(new WaitingState<>(this), new SpleefActiveState(this), new EndState<>(this, "lobby"));
     }
 
-    @Override 
+    @Override
     protected MatchPlayer createPlayer(UUID uuid) {
         return new MatchPlayer(uuid);
     }
 
-    @Override 
+    @Override
     public Logger getLogger() {
         return getPlugin().getLogger();
     }
@@ -67,7 +69,7 @@ public final class SpleefActiveState extends PlayingState<SpleefMatch> {
 
     public SpleefActiveState(SpleefMatch match) { super(match, "Active", 600); }
 
-    @Override 
+    @Override
     protected void onEnter() {
         super.onEnter();                        // IN_GAME status
         register(new SpleefListener(match));   // unregistered automatically when the state ends
@@ -120,11 +122,48 @@ match.eliminate(player.getUniqueId());
 (default: go to the next state, usually your `EndState`). Players who quit are eliminated too, or get time to reconnect:
 
 ```java
-@Override 
+@Override
 protected int rejoinSeconds() { return 30; }
 ```
 
-Players who log in during the game spectate. Turn that off with `allowSpectators()`.
+Players who were eliminated spectate. Anyone else who logs in during the game spectates only with the
+`referee.spectate` permission (staff); override `canSpectate(player)` to change that.
+
+## Spectators
+
+By default spectators get vanilla spectator mode. Opt in for spectators that fly in adventure mode, hidden from
+players and unable to touch anything, with a compass that opens a menu of everyone still playing:
+
+```java
+@Override
+protected SpectatorHandler<MatchPlayer> createSpectatorHandler() {
+    return new SpectatorHandler<>(this);
+}
+```
+
+This needs the [Satchel](https://github.com/Tqqn/Satchel) plugin on the server; add `depend: [Satchel]` to your
+`plugin.yml`. Games that don't opt in don't need Satchel.
+
+By default a menu entry shows the team:
+
+```
+[RED] Tqqn
+Team: Red
+Click to spectate
+```
+
+Add game info by extending `SpectatorHandler` and returning your subclass instead:
+
+```java
+@Override
+protected List<String> headLore(SkywarsPlayer target, Player online) {
+    final List<String> lore = new ArrayList<>(super.headLore(target, online));
+    lore.add(lore.size() - 1, "<gray>Kit: <white>" + target.getKit().name());
+    return lore;
+}
+```
+
+Override `headName` for the name line, `createHead` for a different item, or `apply(player)` for extra spectator items.
 
 ## Arenas
 

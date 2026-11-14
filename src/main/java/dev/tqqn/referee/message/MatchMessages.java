@@ -55,4 +55,20 @@ public interface MatchMessages {
     default String playerLeftMatch(String name) {
         return "<red>" + name + " left the match.";
     }
+
+    default String teleportCompassName() {
+        return "<green>Teleporter <yellow>[RIGHT-CLICK]";
+    }
+
+    default String teleportMenuTitle() {
+        return "Teleport to a player";
+    }
+
+    default String teleportHeadTeam(String coloredTeamName) {
+        return "<gray>Team: " + coloredTeamName;
+    }
+
+    default String teleportHeadClick() {
+        return "<yellow>Click to spectate";
+    }
 }

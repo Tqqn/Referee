@@ -1,5 +1,7 @@
 package dev.tqqn.referee.message;
 
+import net.kyori.adventure.text.format.NamedTextColor;
+
 /**
  * @author Tqqn (tqqn.dev)
  * Created on 05/11/2026
@@ -70,5 +72,25 @@ public interface MatchMessages {
 
     default String teleportHeadClick() {
         return "<yellow>Click to spectate";
+    }
+
+    /** In front of a spectator's name, in the tab list and above their head (only spectators see each other). */
+    default String spectatorNamePrefix() {
+        return "<gray>✖ | ";
+    }
+
+    /** Colour of a spectator's name in the tab list and above their head. */
+    default NamedTextColor spectatorNameColor() {
+        return NamedTextColor.GRAY;
+    }
+
+    /** Everything before the message in spectator chat; the message itself follows in gray. */
+    default String spectatorChat(String teamPrefix, String name) {
+        return "<gray>[SPECTATOR] " + teamPrefix + "<gray>" + name + "<dark_gray>: ";
+    }
+
+    /** The team part of {@link #spectatorChat}, for spectators who were in a team, e.g. "[RED] ". */
+    default String spectatorChatTeam(String miniColor, String teamName) {
+        return miniColor + "[" + teamName + "] ";
     }
 }

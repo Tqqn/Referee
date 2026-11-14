@@ -15,6 +15,7 @@ import io.papermc.paper.event.connection.PlayerConnectionValidateLoginEvent;
 import lombok.Getter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -67,7 +68,7 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
     }
 
     protected SpectatorHandler createSpectatorHandler() {
-        return new SpectatorHandler(this);
+        return null;
     }
 
     protected StatusPublisher statusPublisher() {
@@ -78,7 +79,7 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
         states = List.copyOf(createStates());
         if (states.isEmpty()) throw new IllegalStateException("createStates() returned no states");
         spectatorHandler = createSpectatorHandler();
-        spectatorHandler.register();
+        if (spectatorHandler != null) spectatorHandler.register();
         ticker = Bukkit.getScheduler().runTaskTimer(plugin, () -> getState().ifPresent(MatchState::tick), 20L, 20L);
         switchTo(0);
     }
@@ -160,7 +161,12 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
     }
 
     public void spectate(Player player) {
-        spectatorHandler.apply(player);
+        if (spectatorHandler != null) {
+            spectatorHandler.apply(player);
+        } else {
+            player.setGameMode(GameMode.SPECTATOR);
+        }
+
     }
 
     protected void onDecided() {

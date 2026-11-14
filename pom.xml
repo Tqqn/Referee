@@ -6,7 +6,7 @@
 
     <groupId>dev.tqqn</groupId>
     <artifactId>referee</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
     <name>Referee</name>
     <description>Small state-machine framework for minigames: states, teams, lobby countdown, end flow.</description>
 
@@ -24,6 +24,10 @@
         <repository>
             <id>aikar</id>
             <url>https://repo.aikar.co/content/groups/aikar/</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 
@@ -51,6 +55,12 @@
             <artifactId>junit-jupiter</artifactId>
             <version>5.11.3</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.Tqqn</groupId>
+            <artifactId>Satchel</artifactId>
+            <version>0.1.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

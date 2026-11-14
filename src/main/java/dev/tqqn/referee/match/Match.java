@@ -6,6 +6,7 @@ import dev.tqqn.referee.event.PlayerEliminatedEvent;
 import dev.tqqn.referee.message.MatchMessages;
 import dev.tqqn.referee.player.MatchPlayer;
 import dev.tqqn.referee.player.Role;
+import dev.tqqn.referee.spectator.SpectatorHandler;
 import dev.tqqn.referee.state.MatchState;
 import dev.tqqn.referee.state.StateScope;
 import dev.tqqn.referee.status.MatchStatus;
@@ -14,7 +15,6 @@ import io.papermc.paper.event.connection.PlayerConnectionValidateLoginEvent;
 import lombok.Getter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -44,6 +44,7 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
     private int stateIndex = -1;
     private StateScope scope;
     private BukkitTask ticker;
+    private SpectatorHandler spectatorHandler;
 
     private MatchStatus status = MatchStatus.NOT_JOINABLE;
 
@@ -65,6 +66,10 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
         return MatchMessages.DEFAULT;
     }
 
+    protected SpectatorHandler createSpectatorHandler() {
+        return new SpectatorHandler(this);
+    }
+
     protected StatusPublisher statusPublisher() {
         return StatusPublisher.NONE;
     }
@@ -72,6 +77,8 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
     public void start() {
         states = List.copyOf(createStates());
         if (states.isEmpty()) throw new IllegalStateException("createStates() returned no states");
+        spectatorHandler = createSpectatorHandler();
+        spectatorHandler.register();
         ticker = Bukkit.getScheduler().runTaskTimer(plugin, () -> getState().ifPresent(MatchState::tick), 20L, 20L);
         switchTo(0);
     }
@@ -80,6 +87,7 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
         if (ticker != null) ticker.cancel();
         exitCurrent();
         HandlerList.unregisterAll(this);
+        if (spectatorHandler != null) spectatorHandler.unregister();
     }
 
     public void nextState() {
@@ -152,7 +160,7 @@ public abstract class Match<P extends MatchPlayer> implements Listener {
     }
 
     public void spectate(Player player) {
-        player.setGameMode(GameMode.SPECTATOR);
+        spectatorHandler.apply(player);
     }
 
     protected void onDecided() {

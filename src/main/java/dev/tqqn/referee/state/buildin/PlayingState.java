@@ -1,19 +1,13 @@
 package dev.tqqn.referee.state.buildin;
 
-import com.destroystokyo.paper.profile.PlayerProfile;
 import dev.tqqn.referee.match.Match;
 import dev.tqqn.referee.player.Role;
 import dev.tqqn.referee.state.AbstractState;
 import dev.tqqn.referee.status.MatchStatus;
-import io.papermc.paper.connection.PlayerConfigurationConnection;
-import io.papermc.paper.connection.PlayerConnection;
-import io.papermc.paper.connection.PlayerLoginConnection;
-import io.papermc.paper.event.connection.PlayerConnectionValidateLoginEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +18,8 @@ import java.util.UUID;
  * Created on 11/11/2026
  */
 public abstract class PlayingState<G extends Match<?>> extends AbstractState<G> {
+
+    public static final String SPECTATE_PERMISSION = "referee.spectate";
 
     private final Map<UUID, BukkitTask> disconnected = new HashMap<>();
 
@@ -36,9 +32,8 @@ public abstract class PlayingState<G extends Match<?>> extends AbstractState<G> 
         return 0;
     }
 
-    /** Whether players who aren't (or are no longer) playing may log in to watch. */
-    protected boolean allowSpectators() {
-        return true;
+    protected boolean canSpectate(Player player) {
+        return player.hasPermission(SPECTATE_PERMISSION);
     }
 
     @Override
@@ -47,20 +42,15 @@ public abstract class PlayingState<G extends Match<?>> extends AbstractState<G> 
     }
 
     @Override
-    public void onLogin(PlayerConnectionValidateLoginEvent event) {
-        if (allowSpectators()) return;
-        final UUID uuid = uuidOf(event.getConnection());
-        if (uuid == null || !isRejoining(uuid)) {
-            event.kickMessage(MiniMessage.miniMessage().deserialize(match.messages().notJoinable()));
-        }
-    }
-
-    @Override
     public void onJoin(Player player) {
         final BukkitTask pending = disconnected.remove(player.getUniqueId());
         if (pending != null && !pending.isCancelled()) {
             pending.cancel(); // still PLAYING, Bukkit restored their location and inventory
             match.broadcast(match.messages().playerRejoined(player.getName()));
+            return;
+        }
+        if (match.getPlayer(player).isEmpty() && !canSpectate(player)) {
+            player.kick(MiniMessage.miniMessage().deserialize(match.messages().notJoinable()));
             return;
         }
         match.addPlayer(player, Role.SPECTATOR);
@@ -94,14 +84,5 @@ public abstract class PlayingState<G extends Match<?>> extends AbstractState<G> 
     public boolean isRejoining(UUID uuid) {
         final BukkitTask pending = disconnected.get(uuid);
         return pending != null && !pending.isCancelled();
-    }
-
-    private static @Nullable UUID uuidOf(PlayerConnection connection) {
-        final PlayerProfile profile = switch (connection) {
-            case PlayerLoginConnection login -> login.getAuthenticatedProfile();
-            case PlayerConfigurationConnection config -> config.getProfile();
-            default -> null;
-        };
-        return profile == null ? null : profile.getId();
     }
 }

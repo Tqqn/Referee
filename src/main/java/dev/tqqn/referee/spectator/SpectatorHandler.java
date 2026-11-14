@@ -40,7 +40,7 @@ public class SpectatorHandler<P extends MatchPlayer> implements Listener {
 
     private final TeleporterItem teleporterItem;
 
-    public SpectatorHandler(Match<?> match) {
+    public SpectatorHandler(Match<P> match) {
         if (!Bukkit.getPluginManager().isPluginEnabled("Satchel")) {
             throw new IllegalStateException("Spectators need the Satchel plugin: install it and add depend: [Satchel] to plugin.yml");
         }
